@@ -15,7 +15,7 @@ namespace ServerCore
 {
     class Program
     {
-        // state를 반드시 사용할 필요는 없음.
+        // state를 반드시 사용할 필요는 없음. // static으로 하는 이유는 메인함수가 static이기 때문에 static 함수가 아니면 메인함수에서 사용할수 없기 때문.
         static void MainThread(object state)
         {
             for (int i = 0; i < 5; ++i)
@@ -48,23 +48,24 @@ namespace ServerCore
              * 만약 쓰레드를 너무 많이 사용할 경우, 코어가 여러 쓰레드들을 왔다갔다하는 시간이 더 오래걸릴수 있음(오버헤드)
              * 실제 실행시간보다 이동(빙의)하는 시간이 더 걸릴 수 있음. 동시에 실행되게끔 보이려고 함.
              * 
+             */
             // 쓰레드를 만드는건 매우 큰 부담.
             // 한명의 직원을 추가로 고용하는 형태
-            Thread t = new Thread(MainThread); // 쓰레드를 연결함. 하는일 지정.
+            Thread t2 = new Thread(MainThread); // 쓰레드를 연결함. 하는일 지정.
 
             // 쓰레드 이름지정
-            t.Name = "Test Thread";
+            t2.Name = "Test Thread";
 
             // background 기준일때 메인함수가 종료되면 남아있는 일이 있어도 종료됨
-            t.IsBackground = true; // 기본적으로 C# 쓰레드는 forground thread라서 메인함수가 끝나도 남아있는 쓰레드가 있으면 계속 진행함. background = false 상태임.
+            t2.IsBackground = true; // 기본적으로 C# 쓰레드는 forground thread라서 메인함수가 끝나도 남아있는 쓰레드가 있으면 계속 진행함. background = false 상태임.
 
-            t.Start(); // 별도의 쓰레드가 시작됨.
+            t2.Start(); // 별도의 쓰레드가 시작됨.
 
             Console.WriteLine("Waiting for Thread!");
-            t.Join(); // c++도 join임. // 끝날때까지 기다린다는 의미. 끝나고 아래 순서 실행함.
+            t2.Join(); // c++도 join임. // 끝날때까지 기다린다는 의미. 끝나고 아래 순서 실행함.
 
             Console.WriteLine("Hello World!");
-            */
+            
             while(true)
             {
 
