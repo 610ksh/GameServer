@@ -14,11 +14,7 @@
 - [ ] 수정중
 
 ## :heavy_check_mark: Languages & Library
-- OpenGL(glew,glfw3,opengl)
-- FMOD
-- stb_image
-- Cpp
-- C
+- C#
 
 # 🎨Chapter1. 멀티쓰레드 프로그래밍
 ## Lecture1. 시작하기
