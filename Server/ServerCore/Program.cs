@@ -15,34 +15,33 @@ namespace ServerCore
 {
     class Program
     {
-        volatile static bool _stop = false;
-
-        static void ThreadMain()
-        {
-            Console.WriteLine("쓰레드 시작");
-
-            while(_stop == false)
-            {
-                // 누군가가 stop 신호를 해주기를 기다린다.
-            }
-
-            Console.WriteLine("쓰레드 종료");
-        }
-
+       
         static void Main(string[] args)
         {
-            Task t = new Task(ThreadMain);// 쓰레드가 쓰레드 풀에 있던 쓰레드를 이용해서 일감 하나를 분배받아서 실행.
-            t.Start();
+            int[,] arr = new int[10000, 10000];
 
-            // 1초동안 대기.
-            Thread.Sleep(1000); // ms 단위 10^-3초. 즉 1초 = 1000ms
+            {
+                // 시간 기록함수
+                long now = DateTime.Now.Ticks;
 
-            _stop = true; // 1초후 stop이 true로 바꿔줌
+                for (int y = 0; y < 10000; ++y)
+                    for (int x = 0; x < 10000; ++x)
+                        arr[y, x] = 1;
 
-            Console.WriteLine("Stop 호출");
-            Console.WriteLine("종료 대기중");
-            t.Wait(); // 쓰레드 클래스에서 join과 같은역할임. // 쓰레드가 끝났는지 알아옴.(t 쓰레드 끝날때까지 기다림)
-            Console.WriteLine("종료 성공");
+                long end = DateTime.Now.Ticks;
+                Console.WriteLine($"(y,x) 순서 걸린 시간 = {end-now}");
+            }
+            // 기존의 예상이라면, 똑같은 시간이 걸려야할 것이다.
+            {
+                long now = DateTime.Now.Ticks;
+
+                for (int y = 0; y < 10000; ++y)
+                    for (int x = 0; x < 10000; ++x)
+                        arr[x, y] = 1;
+
+                long end = DateTime.Now.Ticks;
+                Console.WriteLine($"(x,y) 순서 걸린 시간 = {end - now}");
+            }
         }
     }
 }
