@@ -15,6 +15,7 @@
 
 ## :heavy_check_mark: Languages & Library
 - C#
+- gitignore : Visual Studio
 
 # 🎨Chapter1. 멀티쓰레드 프로그래밍
 ## Lecture1. 시작하기
