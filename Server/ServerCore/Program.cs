@@ -13,73 +13,68 @@ using System.Threading.Tasks; // for Task
 
 namespace ServerCore
 {
-    class SessionManager
+    /*
+     * 
+     * 
+     * */
+    class SpinLock
     {
-        static object _lock = new object();
+        volatile int _locked = 0;
 
-        public static void TestSession()
+        // Monitor.Enter()
+        public void Acquire()
         {
-            lock(_lock)
+            while (true)
             {
+                #region
+                /*
+                // 넣기 전의 값을 return함. 그건 아래 용도때문
+                int original = Interlocked.Exchange(ref _locked, 1);
 
+                // 기존 값이 0이면 성공. 만약 1이면 다른 누군가가 동시에 접근했다는 의미라서 다시 반복.
+                if (original == 0)
+                    break;
+                */
+                #endregion
+
+                // CAS Compare-And-Swap
+                int expected = 0;
+                int desired = 1;
+
+                if (Interlocked.CompareExchange(ref _locked, desired, expected) == expected)
+                    break;
             }
         }
 
-        public static void Test()
+        // Monitor.Exit()
+        public void Release()
         {
-            lock (_lock)
-            {
-                UserManager.TestUser();
-            }
+            _locked = 0;
         }
     }
-
-    class UserManager
-    {
-        static object _lock = new object();
-
-        public static void Test()
-        {
-            lock(_lock)
-            {
-                SessionManager.TestSession();
-            }
-        }
-
-        public static void TestUser()
-        {
-            lock (_lock)
-            {
-
-            }
-        }
-    }
-
 
     class Program
     {
-        static int num = 0;
-        static object _obj = new object(); // 실제 데이터를 저장하는 용도는 아님. static이 있어야 안에서 사용가능하므로 static을 사용했음.
+        static int _num = 0;
+        static SpinLock _lock = new SpinLock();
 
         static void Thread_1()
         {
-            for (int i = 0; i < 1000; ++i)
+            for (int i = 0; i < 100000; i++)
             {
-                lock(_obj)
-                {
-                    SessionManager.Test();
-                }
+                _lock.Acquire();
+                _num++;
+                _lock.Release();
             }
         }
 
         static void Thread_2()
         {
-            for (int i = 0; i < 1000; ++i)
+            for (int i = 0; i < 100000; i++)
             {
-                lock (_obj)
-                {
-                    UserManager.Test();
-                }
+                _lock.Acquire();
+                _num--;
+                _lock.Release();
             }
         }
 
@@ -91,9 +86,9 @@ namespace ServerCore
             t1.Start();
             t2.Start();
 
-            Task.WaitAll(t1, t2); // t1, t2쓰레드가 모두 끝날때까지 main 쓰레드는 기달
+            Task.WaitAll(t1, t2);
 
-            Console.WriteLine(num);
+            Console.WriteLine(_num);
         }
     }
 }
