@@ -17,19 +17,16 @@ namespace ServerCore
     class Program
     {
         static int num = 0;
+        static object _obj = new object(); // 실제 데이터를 저장하는 용도는 아님. static이 있어야 안에서 사용가능하므로 static을 사용했음.
 
         static void Thread_1()
         {
             for (int i = 0; i < 1000000; ++i)
             {
-                int before = num;
-                int afterValue = Interlocked.Increment(ref num); // CPU단에서 이 연산을 원자적으로 처리함.
-                int next = num;
-
-
-                // 하지만 그렇다고 이제부터 항상 ++ 안쓰고 interlocked를 사용하는건 무리.
-                // 단점 : 성능상 손해를 많이봄. (연산 속도)
-                // num++;
+                lock(_obj)
+                {
+                    num++;
+                }
             }
         }
 
@@ -37,8 +34,10 @@ namespace ServerCore
         {
             for (int i = 0; i < 1000000; ++i)
             {
-                Interlocked.Decrement(ref num);
-                //num--;
+                lock (_obj)
+                {
+                    num--;
+                }
             }
         }
 
