@@ -13,40 +13,26 @@ namespace ServerCore
 {
     class Program
     {
-        static volatile int count = 0;
-        static Lock _lock = new Lock();
+
+        // 각 쓰레드마다 자신만의 영역을 가짐. 서로 영향주지 않는것.
+        static ThreadLocal<string> ThreadName = new ThreadLocal<string>(()=> { return $"My Name Is {Thread.CurrentThread.ManagedThreadId}"; }); // TLS 방식
+
+        static void WhoAmI()
+        {
+            bool repeat = ThreadName.IsValueCreated;
+            if(repeat)
+                Console.WriteLine(ThreadName.Value + "(repeat)");
+            else
+                Console.WriteLine(ThreadName.Value);
+        }
 
         static void Main(string[] args)
         {
-            Task t1 = new Task(delegate ()
-            {
-                for(int i=0;i<100000;++i)
-                {
-                    // 재귀 허용 test
-                    _lock.WriteLock();
-                    _lock.WriteLock();
-                    count++;
-                    _lock.WriteUnlock();
-                    _lock.WriteUnlock();
-                }
-            });
+            ThreadPool.SetMinThreads(1, 1);
+            ThreadPool.SetMaxThreads(3, 3);
 
-            Task t2 = new Task(delegate ()
-            {
-                for (int i = 0; i < 100000; ++i)
-                {
-                    _lock.WriteLock();
-                    count--;
-                    _lock.WriteUnlock();
-                }
-            });
-
-            t1.Start();
-            t2.Start();
-
-            Task.WaitAll(t1,t2);
-
-            Console.WriteLine(count);
+            // 패럴러 인보크 : 넣어주는 액션만큼을 Task를 만들어서 실행해줌.
+            Parallel.Invoke(WhoAmI, WhoAmI, WhoAmI, WhoAmI, WhoAmI, WhoAmI, WhoAmI, WhoAmI, WhoAmI);
         }
     }
 }
