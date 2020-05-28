@@ -11,46 +11,42 @@ using System.Threading.Tasks; // for Task
 
 namespace ServerCore
 {
-    /*
-     * 
-     * */
-    
     class Program
     {
-        static int _num = 0;
-        static Mutex _lock = new Mutex();
-
-        static void Thread_1()
-        {
-            for (int i = 0; i < 100000; i++)
-            {
-                _lock.WaitOne();
-                _num++;
-                _lock.ReleaseMutex();
-            }
-        }
-
-        static void Thread_2()
-        {
-            for (int i = 0; i < 100000; i++)
-            {
-                _lock.WaitOne();
-                _num--;
-                _lock.ReleaseMutex();
-            }
-        }
+        static volatile int count = 0;
+        static Lock _lock = new Lock();
 
         static void Main(string[] args)
         {
-            Task t1 = new Task(Thread_1);
-            Task t2 = new Task(Thread_2);
+            Task t1 = new Task(delegate ()
+            {
+                for(int i=0;i<100000;++i)
+                {
+                    // 재귀 허용 test
+                    _lock.WriteLock();
+                    _lock.WriteLock();
+                    count++;
+                    _lock.WriteUnlock();
+                    _lock.WriteUnlock();
+                }
+            });
+
+            Task t2 = new Task(delegate ()
+            {
+                for (int i = 0; i < 100000; ++i)
+                {
+                    _lock.WriteLock();
+                    count--;
+                    _lock.WriteUnlock();
+                }
+            });
 
             t1.Start();
             t2.Start();
 
-            Task.WaitAll(t1, t2);
+            Task.WaitAll(t1,t2);
 
-            Console.WriteLine(_num);
+            Console.WriteLine(count);
         }
     }
 }
