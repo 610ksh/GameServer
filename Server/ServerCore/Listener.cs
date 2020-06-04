@@ -11,14 +11,14 @@ namespace ServerCore
     class Listener
     {
         Socket _listenSocket;
-        Action<Socket> _onAcceptHandler; // Accept가 완료되면 어떻게 처리할지에 대해
+        Func<Session> _sessionFactory; // Accept가 완료되면 어떻게 처리할지에 대해
 
         // Initialize
-        public void Init(IPEndPoint endPoint, Action<Socket> onAcceptHandler)
+        public void Init(IPEndPoint endPoint, Func<Session> sessionFactory)
         {
             _listenSocket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            _onAcceptHandler += onAcceptHandler;
+            _sessionFactory += sessionFactory;
 
             // 문지기 교육
             _listenSocket.Bind(endPoint);
@@ -45,8 +45,9 @@ namespace ServerCore
         {
             if (args.SocketError == SocketError.Success) // 잘 처리 됐다는 의미.
             {
-                // args.AcceptSocket의 역할이 Socket clientSocket = _listener.Accept() 와 같다.
-                _onAcceptHandler.Invoke(args.AcceptSocket); // 대리인 소켓 생성(세션)
+                Session session = _sessionFactory.Invoke();
+                session.Start(args.AcceptSocket); // Receive from client
+                session.OnConnected(args.AcceptSocket.RemoteEndPoint); // TODO
             }
             else
                 Console.WriteLine(args.SocketError.ToString());

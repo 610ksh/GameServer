@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net; // for EndPoint
 using System.Net.Sockets; // for Socket;
 using System.Text;
 using System.Threading; // for Interlocked (for thread)
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ServerCore
 {
-    class Session
+    abstract class Session
     {
         Socket _socket;
         int _disconnected = 0; // flag for Interlocked
@@ -19,8 +20,15 @@ namespace ServerCore
 
         SocketAsyncEventArgs _recvArgs = new SocketAsyncEventArgs();
         SocketAsyncEventArgs _sendArgs = new SocketAsyncEventArgs(); // 재사용
-
         List<ArraySegment<byte>> _pendingList = new List<ArraySegment<byte>>(); // for bufferList
+
+        // interface
+        public abstract void OnConnected(EndPoint endpoint); // 클라가 접속
+        public abstract void OnRecv(ArraySegment<byte> buffer); // 패킷 받기 (from Client)
+        public abstract void OnSend(int numOfBytes); // 패킷 보내기 (to Client)
+        public abstract void OnDisconnected(EndPoint endPoint);
+        //
+
 
         public void Start(Socket socket)
         {
@@ -49,6 +57,8 @@ namespace ServerCore
         {
             if (Interlocked.Exchange(ref _disconnected, 1) == 1)
                 return;
+
+            OnDisconnected(_socket.RemoteEndPoint);
 
             _socket.Shutdown(SocketShutdown.Both);
             _socket.Close();
@@ -84,7 +94,8 @@ namespace ServerCore
                         _sendArgs.BufferList = null; // 버퍼 초기화
                         _pendingList.Clear(); // 버퍼리스트를 위한 초기화
 
-                        Console.WriteLine($"Transferred bytes : {_sendArgs.BytesTransferred}");
+                        OnSend(_sendArgs.BytesTransferred);
+                        
 
                         if (_sendQueue.Count > 0) // 큐가 빌때까지
                             RegisterSend(); // 비동기 실행 (낚싯대 던지기)
@@ -116,8 +127,7 @@ namespace ServerCore
             {
                 try
                 {
-                    string recvData = Encoding.UTF8.GetString(args.Buffer, args.Offset, args.BytesTransferred);
-                    Console.WriteLine($"[From Client] {recvData}");
+                    OnRecv(new ArraySegment<byte>(args.Buffer, args.Offset, args.BytesTransferred));
                     RegisterRecv();
                 }
                 catch (Exception e)
