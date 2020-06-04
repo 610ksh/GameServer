@@ -12,7 +12,13 @@ namespace ServerCore
     {
         Socket _socket;
         int _disconnected = 0; // flag for Interlocked
-        // ServerCore의 Receive()를 구현하면 됨.
+
+        Queue<byte[]> _sendQueue = new Queue<byte[]>();
+        bool _pending = false;
+
+        object _lock = new object(); // for lock
+
+        SocketAsyncEventArgs _sendArgs = new SocketAsyncEventArgs(); // 재사용
 
         public void Start(Socket socket)
         {
@@ -21,15 +27,20 @@ namespace ServerCore
             recvArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnRecvCompleted);
             recvArgs.SetBuffer(new byte[1024], 0, 1024); // 버퍼생성
 
+            _sendArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnSendCompleted);
+
             RegisterRecv(recvArgs); // 최초 실행
         }
 
         public void Send(byte[] sendBuff)
         {
-            // _socket.Send(sendBuff);
-            SocketAsyncEventArgs sendArgs = new SocketAsyncEventArgs();
-            sendArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnSendCompleted);
-            sendArgs.SetBuffer(sendBuff, 0, sendBuff.Length);
+            lock (_lock)
+            {
+                // Critical Section
+                _sendQueue.Enqueue(sendBuff);
+                if (_pending == false)
+                    RegisterSend();
+            }
         }
 
         public void Disconnect()
@@ -41,36 +52,47 @@ namespace ServerCore
             _socket.Close();
         }
 
-        #region Receive from client
+        #region 서버 통신
 
         // SendAsync()
-        void RegisterSend(SocketAsyncEventArgs args)
+        void RegisterSend()
         {
-            bool pending = _socket.SendAsync(args);
+            _pending = true;
+            byte[] buff = _sendQueue.Dequeue(); // 버퍼 꺼내기
+            _sendArgs.SetBuffer(buff, 0, buff.Length); // 버퍼설정
+
+            bool pending = _socket.SendAsync(_sendArgs);
             if (pending == false)
-                OnSendCompleted(null, args);
+                OnSendCompleted(null, _sendArgs);
         }
 
         void OnSendCompleted(object sender, SocketAsyncEventArgs args)
         {
-            if (args.BytesTransferred > 0 && args.SocketError == SocketError.Success)
+            // Critical section (cuz _pending)
+            lock (_lock)
             {
-                try
+                if (args.BytesTransferred > 0 && args.SocketError == SocketError.Success)
                 {
-
+                    try
+                    {
+                        if (_sendQueue.Count > 0) // 큐가 빌때까지
+                            RegisterSend(); // 비동기 실행 (낚싯대 던지기)
+                        else
+                            _pending = false; // 끝났음을 표시.
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"OnSendCompleted is Failed {e}");
+                        throw;
+                    }
                 }
-                catch (Exception e)
+                else
                 {
-                    Console.WriteLine($"OnSendCompleted is Failed {e}");
-                    throw;
+                    Disconnect();
                 }
-            }
-            else
-            {
-                Disconnect();
             }
         }
-        
+
 
         // 1.이벤트 등록
         void RegisterRecv(SocketAsyncEventArgs args)
