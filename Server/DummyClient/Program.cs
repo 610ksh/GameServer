@@ -35,9 +35,12 @@ namespace DummyClient
                     socket.Connect(endPoint);
                     Console.WriteLine($"Connected To {socket.RemoteEndPoint.ToString()}");
 
-                    // 보낸다
-                    byte[] sendBuff = Encoding.UTF8.GetBytes("Hello Server, I'm Client");
-                    int sendBytes = socket.Send(sendBuff);
+                    for (int i = 0; i < 5; i++)
+                    {
+                        // 보낸다
+                        byte[] sendBuff = Encoding.UTF8.GetBytes($"Hello Server {i}");
+                        int sendBytes = socket.Send(sendBuff);
+                    }
 
                     // 받는다
                     byte[] recvBuff = new Byte[1024];
@@ -53,7 +56,7 @@ namespace DummyClient
                 {
                     Console.WriteLine(e.ToString());
                 }
-                Thread.Sleep(500); // ms (1000분의 1초, m : 10^-3)
+                Thread.Sleep(1000); // ms (1000분의 1초, m : 10^-3)
             }
         }
     }

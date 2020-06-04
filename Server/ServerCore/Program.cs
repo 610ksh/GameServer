@@ -19,25 +19,25 @@ namespace ServerCore
 
         static void OnAcceptHandler(Socket clientSocket)
         {
+            // 여기까지오면 Connect -> Accept 되어 대리인 소켓인 clientSocket 생성됨.
             try
             {
-                // 받는다
-                byte[] recvBuff = new byte[1024];
-                int recvBytes = clientSocket.Receive(recvBuff);
-                string recvData = Encoding.UTF8.GetString(recvBuff, 0, recvBytes);
-                Console.WriteLine($"[From Client] {recvData}");
+                Session session = new Session(); // Session 생성
+                session.Start(clientSocket); // Receive from client
 
-                // 보낸다
+                // Send to client
                 byte[] sendBuff = Encoding.UTF8.GetBytes("Hi Client, Welcome to MMORPG Server !");
-                clientSocket.Send(sendBuff);
+                session.Send(sendBuff);
 
-                // 쫓아낸다.
-                clientSocket.Shutdown(SocketShutdown.Both);
-                clientSocket.Close();
+                Thread.Sleep(1000); // 1초 대기
+
+                // close to server
+                session.Disconnect();
+                session.Disconnect();
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                Console.WriteLine(e);
             }
         }
 
@@ -47,14 +47,14 @@ namespace ServerCore
             IPHostEntry iPHost = Dns.GetHostEntry(host);
             IPAddress ipAddr = iPHost.AddressList[0];
             IPEndPoint endPoint = new IPEndPoint(ipAddr, 7777);
-            
+
             // 문지기에게 명령함. 혹시 어떤 요청이 들어오면 OnAcceptHandler라는 곳으로 알려줘
-            _listener.Init(endPoint,OnAcceptHandler);
+            _listener.Init(endPoint, OnAcceptHandler);
             Console.WriteLine("Listening. . .");
 
             while (true)
             {
-               // 프로그램 종료되지 않게만 넣어주자.
+                // 프로그램 종료되지 않게만 넣어주자.
             }
         }
     }
