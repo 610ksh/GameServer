@@ -22,9 +22,11 @@ namespace ServerCore
         SocketAsyncEventArgs _sendArgs = new SocketAsyncEventArgs(); // 재사용
         List<ArraySegment<byte>> _pendingList = new List<ArraySegment<byte>>(); // for bufferList
 
+        RecvBuffer _recvBuffer = new RecvBuffer(1024);
+
         // interface
         public abstract void OnConnected(EndPoint endpoint); // 클라가 접속
-        public abstract void OnRecv(ArraySegment<byte> buffer); // 패킷 받기 (from Client)
+        public abstract int OnRecv(ArraySegment<byte> buffer); // 패킷 받기 (from Client)
         public abstract void OnSend(int numOfBytes); // 패킷 보내기 (to Client)
         public abstract void OnDisconnected(EndPoint endPoint);
         //
@@ -35,8 +37,6 @@ namespace ServerCore
             _socket = socket; // socket 연결
 
             _recvArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnRecvCompleted);
-            _recvArgs.SetBuffer(new byte[1024], 0, 1024); // 버퍼생성
-
             _sendArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnSendCompleted);
 
             RegisterRecv(); // 최초 실행
@@ -70,7 +70,7 @@ namespace ServerCore
 
         void RegisterSend()
         {
-            while (_sendQueue.Count>0)
+            while (_sendQueue.Count > 0)
             {
                 byte[] buff = _sendQueue.Dequeue(); // 버퍼 꺼내기
                 _pendingList.Add(new ArraySegment<byte>(buff, 0, buff.Length));
@@ -95,7 +95,7 @@ namespace ServerCore
                         _pendingList.Clear(); // 버퍼리스트를 위한 초기화
 
                         OnSend(_sendArgs.BytesTransferred);
-                        
+
 
                         if (_sendQueue.Count > 0) // 큐가 빌때까지
                             RegisterSend(); // 비동기 실행 (낚싯대 던지기)
@@ -116,6 +116,10 @@ namespace ServerCore
 
         void RegisterRecv()
         {
+            _recvBuffer.Clean();
+            ArraySegment<byte> segment = _recvBuffer.WriteSegment;
+            _recvArgs.SetBuffer(segment.Array, segment.Offset, segment.Count);
+
             bool pending = _socket.ReceiveAsync(_recvArgs); // Receive를 하는건 socket임.
             if (pending == false)
                 OnRecvCompleted(null, _recvArgs);
@@ -127,8 +131,30 @@ namespace ServerCore
             {
                 try
                 {
-                    OnRecv(new ArraySegment<byte>(args.Buffer, args.Offset, args.BytesTransferred));
+                    // Write 커서 이동.
+                    if (_recvBuffer.OnWrite(args.BytesTransferred) == false)
+                    {
+                        Disconnect();
+                        return;
+                    }
+
+                    // 컨텐츠쪽에서 데이터를 넘겨주고 얼마나 처리했는지 받는다.
+                    int processLen = OnRecv(_recvBuffer.ReadSegment);
+                    if (processLen < 0 || _recvBuffer.DataSize < processLen)
+                    {
+                        Disconnect();
+                        return;
+                    }
+
+                    // Read 커서 이동.
+                    if (_recvBuffer.OnRead(processLen) == false)
+                    {
+                        Disconnect();
+                        return;
+                    }
+
                     RegisterRecv();
+
                 }
                 catch (Exception e)
                 {

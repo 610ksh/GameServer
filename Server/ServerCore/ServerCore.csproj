@@ -51,6 +51,7 @@
     <Compile Include="Listener.cs" />
     <Compile Include="Lock.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RecvBuffer.cs" />
     <Compile Include="Session.cs" />
   </ItemGroup>
   <ItemGroup>
