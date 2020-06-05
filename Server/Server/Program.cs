@@ -14,14 +14,30 @@ using ServerCore; // added ServerCore Library
 
 namespace Server
 {
+    class Knight
+    {
+        public int hp;
+        public int attack;
+    }
     class GameSession : Session
     {
         public override void OnConnected(EndPoint endPoint)
         {
             Console.WriteLine($"OnConnected is failed : {endPoint}");
 
-            byte[] sendBuff = Encoding.UTF8.GetBytes("Hi Client, Welcome to MMORPG Server !");
+            Knight knight = new Knight() { hp = 100, attack = 10 };
+
+            ArraySegment<byte> openSegment = SendBufferHelper.Open(4096);
+            byte[] buffer = BitConverter.GetBytes(knight.hp); // knight 객체의 hp 데이터를 바이트로 저장.
+            byte[] buffer2 = BitConverter.GetBytes(knight.attack);
+            Array.Copy(buffer, 0, openSegment.Array, openSegment.Offset, buffer.Length);
+            Array.Copy(buffer2, 0, openSegment.Array, openSegment.Offset+buffer.Length, buffer2.Length);
+            ArraySegment<byte> sendBuff = SendBufferHelper.Close(buffer.Length + buffer2.Length);
+            
+
             Send(sendBuff); // Send to client
+
+
             Thread.Sleep(1000); // 1초 대기
             Disconnect(); // close to server
         }

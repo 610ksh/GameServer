@@ -14,7 +14,7 @@ namespace ServerCore
         Socket _socket;
         int _disconnected = 0; // flag for Interlocked
 
-        Queue<byte[]> _sendQueue = new Queue<byte[]>();
+        Queue<ArraySegment<byte>> _sendQueue = new Queue<ArraySegment<byte>>();
 
         object _lock = new object(); // for lock
 
@@ -42,7 +42,7 @@ namespace ServerCore
             RegisterRecv(); // 최초 실행
         }
 
-        public void Send(byte[] sendBuff)
+        public void Send(ArraySegment<byte> sendBuff)
         {
             lock (_lock)
             {
@@ -72,8 +72,8 @@ namespace ServerCore
         {
             while (_sendQueue.Count > 0)
             {
-                byte[] buff = _sendQueue.Dequeue(); // 버퍼 꺼내기
-                _pendingList.Add(new ArraySegment<byte>(buff, 0, buff.Length));
+                ArraySegment<byte> buff = _sendQueue.Dequeue(); // 버퍼 꺼내기
+                _pendingList.Add(buff);
             }
             _sendArgs.BufferList = _pendingList;
 
