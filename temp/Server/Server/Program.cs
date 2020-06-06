@@ -1,7 +1,16 @@
 ﻿using System;
-using System.Net; // for EndPoint
+using System.Collections.Generic;
+using System.Linq;
+using System.Net; // for DNS
+using System.Net.Sockets; // for Socket
+using System.Text; // for Encoding
 using System.Threading; // for Thread
-using ServerCore;
+using System.Threading.Tasks; // for Task
+using ServerCore; // added ServerCore Library
+
+/*
+ *  Copyright 2020. SungHoon all rights reserved.
+ */
 
 namespace Server
 {
@@ -72,4 +81,5 @@ namespace Server
         }
 
     }
+
 }

@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace ServerCore
 {
-    // 
     class RecvBuffer
     {
         // [ ][r][ ][w] [ ][ ][ ][ ]
@@ -38,7 +39,7 @@ namespace ServerCore
         {
             int dataSize = DataSize;
             // r과 w의 위치가 같을때
-            if (dataSize == 0)
+            if(dataSize==0)
             {
                 // 남은 데이터가 없으면 복사하지 않고 커서 위치만 리셋
                 _readPos = _writePos = 0;
@@ -69,5 +70,6 @@ namespace ServerCore
             _writePos += numOfBytes;
             return true;
         }
+
     }
 }

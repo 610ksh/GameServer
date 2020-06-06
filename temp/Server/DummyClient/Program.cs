@@ -1,9 +1,18 @@
 ﻿using System;
-using System.Net; // for EndPoint
+using System.Collections.Generic;
+using System.Linq;
+using System.Net; // for Dns
 using System.Net.Sockets; // for Socket
-using System.Text;
-using System.Threading;
-using ServerCore;
+using System.Text; // for Encoding
+using System.Threading; // for Thread
+using System.Threading.Tasks;
+using ServerCore; // added ServerCore Library
+
+/*
+ * 임시 클라이언트 역할.
+ * 
+ *  Copyright 2020. SungHoon all rights reserved.
+ */
 
 namespace DummyClient
 {

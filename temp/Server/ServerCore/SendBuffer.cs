@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
-using System.Threading; // for ThreadLocal
+using System.Threading; // for Thread
+using System.Threading.Tasks;
 
 namespace ServerCore
 {
@@ -46,7 +48,7 @@ namespace ServerCore
         {
             // 사용 가능 크기보다 클 경우
             if (reserveSize > FreeSize)
-                return null;
+                return ArraySegment<byte>;
 
             return new ArraySegment<byte>(_buffer, _usedSize, _buffer.Length);
         }
