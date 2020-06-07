@@ -15,9 +15,9 @@ namespace Server
     {
         public override void OnConnected(EndPoint endPoint)
         {
-            Console.WriteLine($"OnConnected is failed : {endPoint}");
-
-            //Packet packet = new Packet() { size = 4, packetId = 7 };
+            Console.WriteLine($"OnConnected(Server) : {endPoint}"); // Session 소켓의 정보임.
+            Console.WriteLine("OnConnected 성공함. 이전 함수 Session.Start() 수행하고 실행됨.");
+            //Packet packet = new Packet() { size = 100, packetId = 10 };
 
             //ArraySegment<byte> openSegment = SendBufferHelper.Open(4096);
             //byte[] buffer = BitConverter.GetBytes(packet.size); // knight 객체의 hp 데이터를 바이트로 저장.
@@ -34,10 +34,11 @@ namespace Server
             Disconnect(); // close to server
         }
 
+        // sealed 되어서 OnRecv는 사용x 대신 아래것을 사용.
         public override void OnRecvPacket(ArraySegment<byte> buffer)
         {
             ushort size = BitConverter.ToUInt16(buffer.Array, buffer.Offset);
-            ushort id = BitConverter.ToUInt16(buffer.Array, buffer.Offset + 2);
+            ushort id = BitConverter.ToUInt16(buffer.Array, buffer.Offset + 2); // 2바이트 이후
             Console.WriteLine($"RecvPacketId : {id}, Size {size}");
         }
 
@@ -62,6 +63,7 @@ namespace Server
             IPAddress ipAddr = ipHost.AddressList[0];
             IPEndPoint endPoint = new IPEndPoint(ipAddr, 7777);
 
+            // 세션을 Lambda 형태로 만들어줌. 일단 GameSession 형태로 만듦.
             _listener.Init(endPoint, () => { return new GameSession(); });
             Console.WriteLine("Listening. . .");
 

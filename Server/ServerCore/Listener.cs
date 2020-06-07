@@ -20,8 +20,11 @@ namespace ServerCore
 
             // 문지기 교육
             _listenSocket.Bind(endPoint);
+
             // 영업 시작
             _listenSocket.Listen(10);
+
+            // 이벤트 등록
             for (int i = 0; i < 10; ++i)
             {
                 SocketAsyncEventArgs args = new SocketAsyncEventArgs(); // 이벤트 생성
@@ -43,9 +46,9 @@ namespace ServerCore
         {
             if (args.SocketError == SocketError.Success) // 잘 처리 됐다는 의미.
             {
-                Session session = _sessionFactory.Invoke();
-                session.Start(args.AcceptSocket); // Receive from client
-                session.OnConnected(args.AcceptSocket.RemoteEndPoint); // TODO
+                Session session = _sessionFactory.Invoke(); // 메인의 GameSession을 호출함.
+                session.Start(args.AcceptSocket); // Session(대리인)을 소켓 설정및 초기화를 시작함.
+                session.OnConnected(args.AcceptSocket.RemoteEndPoint); // 위까지 세션까지 만들었다는건, 연결되었다는 의미.
             }
             else
                 Console.WriteLine(args.SocketError.ToString());

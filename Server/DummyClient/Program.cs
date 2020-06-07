@@ -17,7 +17,7 @@ namespace DummyClient
     {
         public override void OnConnected(EndPoint endPoint)
         {
-            Console.WriteLine($"OnConnected is failed : {endPoint}");
+            Console.WriteLine($"OnConnected(Client) : {endPoint}");
 
             Packet packet = new Packet() { size = 4, packetId = 7 };
 
@@ -29,7 +29,7 @@ namespace DummyClient
                 byte[] buffer2 = BitConverter.GetBytes(packet.packetId);
                 Array.Copy(buffer, 0, openSegment.Array, openSegment.Offset, buffer.Length);
                 Array.Copy(buffer2, 0, openSegment.Array, openSegment.Offset + buffer.Length, buffer2.Length);
-                ArraySegment<byte> sendBuff = SendBufferHelper.Close(buffer.Length + buffer2.Length);
+                ArraySegment<byte> sendBuff = SendBufferHelper.Close(packet.size);
 
                 Send(sendBuff);
             }
@@ -37,13 +37,14 @@ namespace DummyClient
 
         public override void OnDisconnected(EndPoint endPoint)
         {
-            Console.WriteLine($"OnDisconnected is failed : {endPoint}");
+            Console.WriteLine($"OnDisconnected : {endPoint}");
         }
 
         public override int OnRecv(ArraySegment<byte> buffer)
         {
             string recvData = Encoding.UTF8.GetString(buffer.Array, buffer.Offset, buffer.Count);
             Console.WriteLine($"[From Server] {recvData}");
+
             return buffer.Count;
         }
 
@@ -63,20 +64,15 @@ namespace DummyClient
             IPAddress ipAddr = iPHost.AddressList[0];
             IPEndPoint endPoint = new IPEndPoint(ipAddr, 7777);
 
-            Connector connector = new Connector();
+            Connector connector = new Connector(); // ServerCore 라이브러리 사용
+            
+            // 아래 연결하는 GameSession은 클라쪽에서 생성한 GameSession임. 서버x
             connector.Connect(endPoint, () => { return new GameSession(); });
 
             while (true)
             {
-                // 휴대폰 설정하기
-                Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
                 try
                 {
-                    // 문지기한테 입장 문의
-                    // 보낸다
-                    // 받는다
-                    // 나간다.
                 }
                 catch (Exception e)
                 {

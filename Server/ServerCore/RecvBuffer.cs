@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ServerCore
 {
-    // 
+    // Session에서 사용할 RecvBuffer
     class RecvBuffer
     {
         // [ ][r][ ][w] [ ][ ][ ][ ]
@@ -12,10 +12,9 @@ namespace ServerCore
         int _readPos;
         int _writePos;
 
-        public RecvBuffer(int bufferSize)
+        public RecvBuffer(int bufferSize) // 현재 Session에서 1024로 초기화중
         {
             _buffer = new ArraySegment<byte>(new byte[bufferSize], 0, bufferSize);
-
         }
 
         // 실제로 사용한 버퍼의 사이즈
@@ -24,17 +23,17 @@ namespace ServerCore
         public int FreeSize { get { return _buffer.Count - _writePos; } }
 
         // 현재 사용중인 버퍼
-        public ArraySegment<byte> WriteSegment
+        public ArraySegment<byte> ReadSegment
         {
             get { return new ArraySegment<byte>(_buffer.Array, _buffer.Offset + _readPos, DataSize); }
         }
 
-        public ArraySegment<byte> ReadSegment
+        public ArraySegment<byte> WriteSegment
         {
             get { return new ArraySegment<byte>(_buffer.Array, _buffer.Offset + _writePos, FreeSize); }
         }
 
-        public void Clean()
+        public void Clean() // 버퍼 초기화 (커서 당기기)
         {
             int dataSize = DataSize;
             // r과 w의 위치가 같을때
