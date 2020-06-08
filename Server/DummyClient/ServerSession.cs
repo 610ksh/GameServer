@@ -19,41 +19,66 @@ namespace DummyClient
     class PlayerInfoReq : Packet
     {
         public long playerId; // 8(Int64)
+        public string name;
 
         public PlayerInfoReq()
         {
             this.packetId = (ushort)PacketID.PlayerInfoReq;
         }
 
-        public override void Read(ArraySegment<byte> s)
+        public override void Read(ArraySegment<byte> segment)
         {
             ushort count = 0;
 
-            //ushort size = BitConverter.ToUInt16(s.Array, s.Offset + count);
-            count += 2;
-            //ushort id = BitConverter.ToUInt16(s.Array, s.Offset + count); // 2바이트 이후
-            count += 2;
+            ReadOnlySpan<byte> s = new ReadOnlySpan<byte>(segment.Array, segment.Offset, segment.Count);
 
-            this.playerId = BitConverter.ToInt64(new ReadOnlySpan<byte>(s.Array, s.Offset + count, s.Count - count)); // 범위를 짚어줌. 몇바이트인지도 지정
-            count += 8;
+            //ushort size = BitConverter.ToUInt16(s.Array, s.Offset + count);
+            count += sizeof(ushort);
+            //ushort id = BitConverter.ToUInt16(s.Array, s.Offset + count); // 2바이트 이후
+            count += sizeof(ushort);
+
+            this.playerId = BitConverter.ToInt64(s.Slice(count, s.Length - count)); // 범위를 짚어줌. 몇바이트인지도 지정
+            count += sizeof(long);
+
+            // string
+            ushort nameLen = BitConverter.ToUInt16(s.Slice(count, s.Length - count));
+            this.name = Encoding.Unicode.GetString(s.Slice(count, nameLen));
         }
 
         public override ArraySegment<byte> Write()
         {
-            ArraySegment<byte> s = SendBufferHelper.Open(4096); // 버퍼 공간확보
+            ArraySegment<byte> segment = SendBufferHelper.Open(4096); // 버퍼 공간확보
 
             ushort count = 0; // 자료형 중요함.
             bool success = true;
 
+            Span<byte> s = new Span<byte>(segment.Array, segment.Offset, segment.Count);
+
             // [][][][][][][][][][]
             // size는 마지막에 최종적으로 확정되기 때문에 맨 마지막에 count 변수로 처리한다.
             // success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset, s.Count), packet.size);
-            count += 2;
-            success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset + count, s.Count - count), this.packetId);
-            count += 2;
-            success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset + count, s.Count - count), this.playerId);
-            count += 8;
-            success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset, s.Count), count); // packet.size = count
+            count += sizeof(ushort);
+            success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), this.packetId);
+            count += sizeof(ushort);
+            success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), this.playerId);
+            count += sizeof(long);
+            
+
+
+            // string
+            //ushort nameLen = (ushort)Encoding.Unicode.GetByteCount(this.name);
+            //success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), nameLen);
+            //count += sizeof(ushort);
+            //Array.Copy(Encoding.Unicode.GetBytes(this.name), 0, segment.Array, count, nameLen);
+            //count += nameLen;
+
+            ushort nameLen = (ushort)Encoding.Unicode.GetBytes(this.name, 0, this.name.Length, segment.Array, segment.Offset + count);
+            success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), nameLen);
+            count += sizeof(ushort);
+            count += nameLen;
+
+
+            success &= BitConverter.TryWriteBytes(s, count); // packet.size = count
 
             if (success == false)
                 return null; // 유의 위의 Array가 null로 셋팅되어 넘어가는걸 의도.
@@ -74,7 +99,7 @@ namespace DummyClient
         {
             Console.WriteLine($"OnConnected(Client) : {endPoint}");
 
-            PlayerInfoReq packet = new PlayerInfoReq() { playerId = 1001 };
+            PlayerInfoReq packet = new PlayerInfoReq() { playerId = 1001, name = "ABCD" };
 
             // 보낸다
             //for (int i = 0; i < 5; i++)
