@@ -7,23 +7,12 @@ using System.Threading;
 
 namespace Server
 {
-    // 서버쪽의 대리인 (최상위 클래스)
-    public abstract class Packet
-    {
-        public ushort size; // 2
-        public ushort packetId; // 2
-
-        public abstract ArraySegment<byte> Write();
-        public abstract void Read(ArraySegment<byte> s);
-    }
-
-    // 상속, 실질적인 생성 객체
-    class PlayerInfoReq : Packet
+    class PlayerInfoReq
     {
         public long playerId; // 8(Int64)
         public string name;
 
-        // 모든 skill 객체들은 아래에 해당하는 정보를 담고 있음.
+        // list, 모든 skill 객체들은 아래에 해당하는 정보를 담고 있음.
         public struct SkillInfo
         {
             public int id;
@@ -57,13 +46,7 @@ namespace Server
         // skill에 대한 객체생성. 스킬 종류가 늘어날때마다 List에 Add로 추가. 
         public List<SkillInfo> skills = new List<SkillInfo>();
 
-        // default Constructor (생성)
-        public PlayerInfoReq()
-        {
-            this.packetId = (ushort)PacketID.PlayerInfoReq;
-        }
-
-        public override void Read(ArraySegment<byte> segment)
+        public void Read(ArraySegment<byte> segment)
         {
             ushort count = 0;
 
@@ -97,7 +80,7 @@ namespace Server
         }
 
 
-        public override ArraySegment<byte> Write()
+        public ArraySegment<byte> Write()
         {
             ArraySegment<byte> segment = SendBufferHelper.Open(4096); // 버퍼 공간확보
 
@@ -111,7 +94,7 @@ namespace Server
             // size는 마지막에 최종적으로 확정되기 때문에 맨 마지막에 count 변수로 처리한다.
             // success &= BitConverter.TryWriteBytes(new Span<byte>(s.Array, s.Offset, s.Count), packet.size);
             count += sizeof(ushort);
-            success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), this.packetId);
+            success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), (ushort)PacketID.PlayerInfoReq);
             count += sizeof(ushort);
             success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), this.playerId);
             count += sizeof(long);
