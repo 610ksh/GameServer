@@ -12,6 +12,7 @@ namespace DummyClient
         public long playerId; // 8(Int64)
         public string name;
 
+        #region Skill
         // 모든 skill 객체들은 아래에 해당하는 정보를 담고 있음.
         public struct SkillInfo
         {
@@ -45,6 +46,7 @@ namespace DummyClient
 
         // skill에 대한 객체생성. 스킬 종류가 늘어날때마다 List에 Add로 추가. 
         public List<SkillInfo> skills = new List<SkillInfo>();
+        #endregion
 
         public void Read(ArraySegment<byte> segment)
         {
