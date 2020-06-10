@@ -7,12 +7,19 @@
     r["name"] : r 부분의 name 태그 부분
    -->
   <packet name="PlayerInfoReq">
+    <byte name ="testByte"/>
     <long name="playerId"/>
     <string name="name"/>
     <list name="skill">
       <int name="id"/>
       <short name="level"/>
       <float name="duration"/>
+      <list name="attribute">
+        <int name="att"/>
+      </list>
     </list>
+  </packet>
+  <packet name="Test">
+    <int name="testInt"/>
   </packet>
 </PDL>

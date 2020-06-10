@@ -9,6 +9,7 @@ namespace DummyClient
     // 상속, 실질적인 생성 객체
     class PlayerInfoReq
     {
+        public byte testByte;
         public long playerId; // 8(Int64)
         public string name;
 
@@ -57,6 +58,12 @@ namespace DummyClient
             // default
             count += sizeof(ushort);
             count += sizeof(ushort);
+
+            // testByte
+            this.testByte = segment.Array[segment.Offset + count];
+            count += sizeof(byte);
+
+            //
             this.playerId = BitConverter.ToInt64(s.Slice(count, s.Length - count)); // 범위를 짚어줌. 몇바이트인지도 지정
             count += sizeof(long);
 
@@ -96,6 +103,10 @@ namespace DummyClient
             count += sizeof(ushort);
             success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), (ushort)PacketID.PlayerInfoReq);
             count += sizeof(ushort);
+
+            // testByte
+            segment.Array[segment.Offset + count] = this.testByte;
+            count += sizeof(byte);
 
             success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), this.playerId);
             count += sizeof(long);

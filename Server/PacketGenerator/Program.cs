@@ -7,17 +7,25 @@ namespace PacketGenerator
     class Program
     {
         static string genPackets;
+        static ushort packetId; // 0 초기화
+        static string packetEnums;
         
         static void Main(string[] args)
         {
+            string pdlPath = "../PDL.xml"; // default path
+
             XmlReaderSettings settings = new XmlReaderSettings()
             {
                 IgnoreComments = true, // 주석 무시
                 IgnoreWhitespace = true // space 무시
             };
 
+            // 메인함수로 입력값을 받았으면 경로에 넣어주기
+            if (args.Length >= 1)
+                pdlPath = args[0];
+
             // xml 파일 파서
-            using (XmlReader r = XmlReader.Create("PDL.xml", settings))
+            using (XmlReader r = XmlReader.Create(pdlPath, settings))
             {
                 // 헤더를 건너뜀.
                 r.MoveToContent();
@@ -31,8 +39,10 @@ namespace PacketGenerator
                     //Console.WriteLine(r.Name + " " + r["name"] + " " + r.Depth);
                 }
 
+                // 파일 Text 만들기
+                string fileText = string.Format(PacketFormat.fileFormat, packetEnums, genPackets);
                 // File IO, 해당 string으로 파일생성
-                File.WriteAllText("GenPackets.cs", genPackets);
+                File.WriteAllText("GenPackets.cs", fileText);
             }
 
         }
@@ -63,6 +73,7 @@ namespace PacketGenerator
             // packetFormat 파싱한거 가져오기
             genPackets += string.Format(PacketFormat.packetFormat,
                 packetName, t.Item1, t.Item2, t.Item3);
+            packetEnums += string.Format(PacketFormat.packetEnumFormat, packetName, ++packetId) + Environment.NewLine + "\t";
         }
 
 
@@ -111,6 +122,12 @@ namespace PacketGenerator
 
                 switch (memberType)
                 {
+                    case "byte":
+                    case "sbyte":
+                        memberCode += string.Format(PacketFormat.memberFormat, memberType, memberName);
+                        readCode += string.Format(PacketFormat.readByteFormat, memberName, memberType);
+                        writeCode += string.Format(PacketFormat.writeByteFormat, memberName, memberType);
+                        break;
                     case "bool":
                     case "short":
                     case "ushort":
