@@ -4,8 +4,15 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+interface IPacket
+{
+    ushort Protocol { get; }
+    void Read(ArraySegment<byte> segment);
+    ArraySegment<byte> Write();
+}
+
 // 상속, 실질적인 생성 객체
-class PlayerInfoReq
+class PlayerInfoReq : IPacket
 {
     public byte testByte;
     public long playerId; // 8(Int64)
@@ -45,6 +52,8 @@ class PlayerInfoReq
 
     // skill에 대한 객체생성. 스킬 종류가 늘어날때마다 List에 Add로 추가. 
     public List<SkillInfo> skills = new List<SkillInfo>();
+
+    public ushort Protocol { get { return (ushort)PacketID.PlayerInfoReq; } }
     #endregion
 
     public void Read(ArraySegment<byte> segment)

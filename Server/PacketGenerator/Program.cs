@@ -9,7 +9,9 @@ namespace PacketGenerator
         static string genPackets;
         static ushort packetId; // 0 초기화
         static string packetEnums;
-        
+        static string managerRegister;
+
+
         static void Main(string[] args)
         {
             string pdlPath = "../PDL.xml"; // default path
@@ -43,6 +45,8 @@ namespace PacketGenerator
                 string fileText = string.Format(PacketFormat.fileFormat, packetEnums, genPackets);
                 // File IO, 해당 string으로 파일생성
                 File.WriteAllText("GenPackets.cs", fileText);
+                string managerText = string.Format(PacketFormat.managerFormat, managerRegister);
+                File.WriteAllText("PacketManager.cs", managerText);
             }
 
         }
@@ -74,6 +78,7 @@ namespace PacketGenerator
             genPackets += string.Format(PacketFormat.packetFormat,
                 packetName, t.Item1, t.Item2, t.Item3);
             packetEnums += string.Format(PacketFormat.packetEnumFormat, packetName, ++packetId) + Environment.NewLine + "\t";
+            managerRegister += string.Format(PacketFormat.managerRegisterFormat, packetName) + Environment.NewLine;
         }
 
 
