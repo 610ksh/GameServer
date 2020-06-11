@@ -3,15 +3,12 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-// 상속, 실질적인 생성 객체
 class PlayerInfoReq
 {
-    public byte testByte;
     public long playerId; // 8(Int64)
     public string name;
 
-    #region Skill
-    // 모든 skill 객체들은 아래에 해당하는 정보를 담고 있음.
+    // list, 모든 skill 객체들은 아래에 해당하는 정보를 담고 있음.
     public struct SkillInfo
     {
         public int id;
@@ -44,7 +41,6 @@ class PlayerInfoReq
 
     // skill에 대한 객체생성. 스킬 종류가 늘어날때마다 List에 Add로 추가. 
     public List<SkillInfo> skills = new List<SkillInfo>();
-    #endregion
 
     public void Read(ArraySegment<byte> segment)
     {
@@ -52,15 +48,11 @@ class PlayerInfoReq
 
         ReadOnlySpan<byte> s = new ReadOnlySpan<byte>(segment.Array, segment.Offset, segment.Count);
 
-        // default
+        //ushort size = BitConverter.ToUInt16(s.Array, s.Offset + count);
         count += sizeof(ushort);
+        //ushort id = BitConverter.ToUInt16(s.Array, s.Offset + count); // 2바이트 이후
         count += sizeof(ushort);
 
-        // testByte
-        this.testByte = segment.Array[segment.Offset + count];
-        count += sizeof(byte);
-
-        //
         this.playerId = BitConverter.ToInt64(s.Slice(count, s.Length - count)); // 범위를 짚어줌. 몇바이트인지도 지정
         count += sizeof(long);
 
@@ -75,7 +67,7 @@ class PlayerInfoReq
         ushort skillLen = BitConverter.ToUInt16(s.Slice(count, s.Length - count));
         count += sizeof(ushort);
 
-        for (int i = 0; i < skillLen; i++)
+        for (int i = 0; i < skillLen; ++i)
         {
             SkillInfo skill = new SkillInfo();
             skill.Read(s, ref count);
@@ -100,11 +92,6 @@ class PlayerInfoReq
         count += sizeof(ushort);
         success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), (ushort)PacketID.PlayerInfoReq);
         count += sizeof(ushort);
-
-        // testByte
-        segment.Array[segment.Offset + count] = this.testByte;
-        count += sizeof(byte);
-
         success &= BitConverter.TryWriteBytes(s.Slice(count, s.Length - count), this.playerId);
         count += sizeof(long);
 
