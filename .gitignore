@@ -358,7 +358,7 @@ MigrationBackup/
 #
 /[Ll]ibrary/
 /[Tt]emp/
-/[Oo]bj/
+MMO_Server/Client/[Oo]bj/
 /[Bb]uild/
 /[Bb]uilds/
 /[Ll]ogs/
