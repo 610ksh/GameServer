@@ -16,18 +16,18 @@
 # Mono auto generated files
 mono_crash.*
 
-# Build results
-[Dd]ebug/
+# Build results ★★★
+### [Dd]ebug/  ## for .exe about PacketGenerator
 [Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
+### [Rr]elease/ ## for .exe about PacketGenerator
+### [Rr]eleases/ ## for .exe about PacketGenerator
 x64/
 x86/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 bld/
-[Bb]in/
-[Oo]bj/
+### [Bb]in/ ## for .exe about PacketGenerator
+### [Oo]bj/ ## ## for .exe about PacketGenerator
 [Ll]og/
 [Ll]ogs/
 
