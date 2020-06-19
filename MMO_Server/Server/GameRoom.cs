@@ -44,7 +44,7 @@ namespace Server
                 players.players.Add(new S_PlayerList.Player()
                 {
                     isSelf = (s == session),
-                    playerId = session.SessionId,
+                    playerId = s.SessionId,
                     posX = s.PosX,
                     posY = s.PosY,
                     posZ = s.PosZ,
