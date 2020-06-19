@@ -12,8 +12,8 @@
 5. 유니티 연동
 
 ## ☑ TODO
-- [x] 2020.05.22 start
-- [ ] 수정중
+- [x] 2020.05.22 Start project
+- [x] 2020.06.19 1st End
 - [ ] 수정중
 
 ## :heavy_check_mark: Languages & Library
