@@ -12,7 +12,7 @@ namespace PacketGenerator
 using System;
 using System.Collections.Generic;
 
-class PacketManager
+public class PacketManager
 {{
 	#region Singleton
 	static PacketManager _instance = new PacketManager();
@@ -32,7 +32,7 @@ class PacketManager
 {0}
 	}}
 
-	public void OnRecvPacket(PacketSession session, ArraySegment<byte> buffer,  Action<PacketSession, IPacket> onRecvCallback = null)
+	public void OnRecvPacket(PacketSession session, ArraySegment<byte> buffer, Action<PacketSession, IPacket> onRecvCallback = null)
 	{{
 		ushort count = 0;
 
@@ -42,29 +42,29 @@ class PacketManager
 		count += 2;
 
 		Func<PacketSession, ArraySegment<byte>, IPacket> func = null;
-        if (_makeFunc.TryGetValue(id, out func))
-        {{
-            IPacket packet = func.Invoke(session, buffer);
-            if (onRecvCallback != null)
-                onRecvCallback.Invoke(session, packet);
-            else
-                HandlePacket(session, packet);
-        }}
+		if (_makeFunc.TryGetValue(id, out func))
+		{{
+			IPacket packet = func.Invoke(session, buffer);
+			if (onRecvCallback != null)
+				onRecvCallback.Invoke(session, packet);
+			else
+				HandlePacket(session, packet);
+		}}
 	}}
 
 	T MakePacket<T>(PacketSession session, ArraySegment<byte> buffer) where T : IPacket, new()
-    {{
-        T pkt = new T();
-        pkt.Read(buffer);
-        return pkt;
-    }}
+	{{
+		T pkt = new T();
+		pkt.Read(buffer);
+		return pkt;
+	}}
 
-    public void HandlePacket(PacketSession session, IPacket packet)
-    {{
-        Action<PacketSession, IPacket> action = null;
-        if (_handler.TryGetValue(packet.Protocol, out action))
-            action.Invoke(session, packet);
-    }}
+	public void HandlePacket(PacketSession session, IPacket packet)
+	{{
+		Action<PacketSession, IPacket> action = null;
+		if (_handler.TryGetValue(packet.Protocol, out action))
+			action.Invoke(session, packet);
+	}}
 }}";
 
 		// {0} 패킷 이름
@@ -108,7 +108,7 @@ public interface IPacket
 		// {3} 멤버 변수 Write
 		public static string packetFormat =
 @"
-class {0} : IPacket
+public class {0} : IPacket
 {{
 	{1}
 
@@ -171,7 +171,7 @@ public List<{0}> {1}s = new List<{0}>();";
 		// {1} To~ 변수 형식
 		// {2} 변수 형식
 		public static string readFormat =
-@"this.{0} = BitConverter.{1}(segment.Array,segment.Offset + count);
+@"this.{0} = BitConverter.{1}(segment.Array, segment.Offset + count);
 count += sizeof({2});";
 
 		// {0} 변수 이름
@@ -196,7 +196,7 @@ count += sizeof(ushort);
 for (int i = 0; i < {1}Len; i++)
 {{
 	{0} {1} = new {0}();
-	{1}.Read(s, ref count);
+	{1}.Read(segment, ref count);
 	{1}s.Add({1});
 }}";
 
